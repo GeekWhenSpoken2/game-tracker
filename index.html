@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Game Backlog & Release Tracker</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --danger: #ef4444;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 2rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: var(--card-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .tracker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .column {
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            min-height: 400px;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .column-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-count {
+            background-color: var(--card-hover);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+        }
+
+        .upcoming-border { border-color: var(--accent-blue); }
+        .wildcard-border { border-color: var(--accent-amber); }
+        .released-border { border-color: var(--accent-green); }
+
+        .game-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-color: #475569;
+        }
+
+        .game-card.played {
+            opacity: 0.6;
+        }
+
+        .game-card.played .game-title {
+            text-decoration: line-through;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .game-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .game-date {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .wildcard-card .game-date { color: var(--accent-amber); }
+        .released-card .game-date { color: var(--accent-green); }
+
+        .game-notes {
+            font-size: 0.825rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.4rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 0.5rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .action-btn:hover {
+            background-color: var(--card-hover);
+            color: var(--text-primary);
+        }
+
+        .action-btn.delete:hover {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.6rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>Game Release Tracker</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn-primary" onclick="openAddModal()">+ Add Game</button>
+            <button class="btn-secondary" onclick="resetDefaultData()">Reset Defaults</button>
+        </div>
+    </header>
+
+    <div class="tracker-grid">
+        <!-- Upcoming Column -->
+        <div class="column">
+            <div class="column-header upcoming-border">
+                <div class="column-title">
+                    High Priority: Upcoming
+                    <span id="count-upcoming" class="badge-count">0</span>
+                </div>
+            </div>
+            <div id="list-upcoming"></div>
+        </div>
+
+        <!-- Wildcards Column -->
+        <div class="column">
+            <div class="column-header wildcard-border">
+                <div class="column-title">
+                    Wildcards / TBD
+                    <span id="count-wildcard" class="badge-count">0</span>
+                </div>
+            </div>
+            <div id="list-wildcard"></div>
+        </div>
+
+        <!-- Released Column -->
+        <div class="column">
+            <div class="column-header released-border">
+                <div class="column-title">
+                    Already Released
+                    <span id="count-released" class="badge-count">0</span>
+                </div>
+            </div>
+            <div id="list-released"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalHeader" class="modal-title">Add New Game</h2>
+            <form id="gameForm">
+                <input type="hidden" id="gameId">
+                <div class="form-group">
+                    <label>Game Title</label>
+                    <input type="text" id="gameTitle" required placeholder="e.g. GTA 6">
+                </div>
+                <div class="form-group">
+                    <label>Status / Category</label>
+                    <select id="gameCategory">
+                        <option value="upcoming">Upcoming Release</option>
+                        <option value="wildcard">Wildcard / TBD</option>
+                        <option value="released">Already Released</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Release Date / Window</label>
+                    <input type="text" id="gameDate" placeholder="e.g. November 19, 2026 or TBD">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="gameNotes" rows="2" placeholder="Optional notes..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Game</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const initialGames = [
+            // Upcoming
+            { id: "1", title: "Halo: Campaign Evolved", category: "upcoming", date: "July 28, 2026", notes: "Drops in just a few days", played: false },
+            { id: "2", title: "Resonance: A Plague Tale Legacy", category: "upcoming", date: "August 27, 2026", notes: "", played: false },
+            { id: "3", title: "Blood of the Dawnwalker", category: "upcoming", date: "September 3, 2026", notes: "", played: false },
+            { id: "4", title: "Wolverine", category: "upcoming", date: "September 15, 2026", notes: "", played: false },
+            { id: "5", title: "Control Resonant (Control 2)", category: "upcoming", date: "September 24, 2026", notes: "Playing as Dylan Faden in Manhattan", played: false },
+            { id: "6", title: "End of Abyss", category: "upcoming", date: "October 1, 2026", notes: "", played: false },
+            { id: "7", title: "Gears: E-Day", category: "upcoming", date: "October 6, 2026", notes: "", played: false },
+            { id: "8", title: "Castlevania Belmont’s Curse", category: "upcoming", date: "October 15, 2026", notes: "", played: false },
+            { id: "9", title: "GTA 6", category: "upcoming", date: "November 19, 2026", notes: "", played: false },
+            { id: "10", title: "Tomb Raider: Legacy of Atlantis", category: "upcoming", date: "February 12, 2027", notes: "", played: false },
+            { id: "11", title: "God of War: Laufey", category: "upcoming", date: "Expected Feb / Mar 2027", notes: "", played: false },
+
+            // Wildcards
+            { id: "12", title: "The Eternal Life of Goldman", category: "wildcard", date: "TBD 2026", notes: "Hand-drawn platformer from Weappy Studio", played: false },
+            { id: "13", title: "1666 Amsterdam", category: "wildcard", date: "TBD", notes: "30-min prologue demo dropped June 5", played: false },
+            { id: "14", title: "CrossFire", category: "wildcard", date: "TBD", notes: "Single-player shooter from That's No Moon", played: false },
+            { id: "15", title: "gen Atlas", category: "wildcard", date: "TBD", notes: "Next project from genDESIGN / Fumito Ueda", played: false },
+            { id: "16", title: "Stellar Blade: Blood Rain", category: "wildcard", date: "TBD", notes: "Sequel featuring new protagonist, Evie", played: false },
+
+            // Released
+            { id: "17", title: "Minishoot' Adventures", category: "released", date: "Released April 2, 2024", notes: "Console ports launched March 2026", played: false },
+            { id: "18", title: "Stellar Blade (Original)", category: "released", date: "Released April 26, 2024", notes: "", played: false },
+            { id: "19", title: "Clair Obscur: Expedition 33", category: "released", date: "Released April 24, 2025", notes: "", played: false },
+            { id: "20", title: "Mafia: The Old Country", category: "released", date: "Released August 8, 2025", notes: "", played: false },
+            { id: "21", title: "Hades II", category: "released", date: "Released September 25, 2025", notes: "v1.0 hit consoles April 2026", played: false },
+            { id: "22", title: "007 First Light", category: "released", date: "Released May 27, 2026", notes: "", played: false },
+            { id: "23", title: "AC Black Flag Resynced", category: "released", date: "Released July 9, 2026", notes: "Launched earlier this month", played: false }
+        ];
+
+        let games = JSON.parse(localStorage.getItem('gameTrackerData')) || initialGames;
+
+        function saveToStorage() {
+            localStorage.setItem('gameTrackerData', JSON.stringify(games));
+        }
+
+        function render() {
+            const upcomingList = document.getElementById('list-upcoming');
+            const wildcardList = document.getElementById('list-wildcard');
+            const releasedList = document.getElementById('list-released');
+
+            upcomingList.innerHTML = '';
+            wildcardList.innerHTML = '';
+            releasedList.innerHTML = '';
+
+            let counts = { upcoming: 0, wildcard: 0, released: 0 };
+
+            games.forEach(game => {
+                counts[game.category]++;
+                const card = createCardElement(game);
+
+                if (game.category === 'upcoming') upcomingList.appendChild(card);
+                else if (game.category === 'wildcard') wildcardList.appendChild(card);
+                else if (game.category === 'released') releasedList.appendChild(card);
+            });
+
+            document.getElementById('count-upcoming').innerText = counts.upcoming;
+            document.getElementById('count-wildcard').innerText = counts.wildcard;
+            document.getElementById('count-released').innerText = counts.released;
+        }
+
+        function createCardElement(game) {
+            const card = document.createElement('div');
+            card.className = `game-card ${game.category}-card ${game.played ? 'played' : ''}`;
+            
+            card.innerHTML = `
+                <div class="game-header">
+                    <span class="game-title">${escapeHtml(game.title)}</span>
+                </div>
+                <div class="game-date">${escapeHtml(game.date || 'TBD')}</div>
+                ${game.notes ? `<div class="game-notes">${escapeHtml(game.notes)}</div>` : ''}
+                <div class="card-actions">
+                    <button class="action-btn" onclick="togglePlayed('${game.id}')">
+                        ${game.played ? 'Mark Unplayed' : '✓ Played'}
+                    </button>
+                    <button class="action-btn" onclick="editGame('${game.id}')">Edit</button>
+                    <button class="action-btn delete" onclick="deleteGame('${game.id}')">Delete</button>
+                </div>
+            `;
+            return card;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function openAddModal() {
+            document.getElementById('gameForm').reset();
+            document.getElementById('gameId').value = '';
+            document.getElementById('modalHeader').innerText = 'Add New Game';
+            document.getElementById('gameModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('gameModal').style.display = 'none';
+        }
+
+        function editGame(id) {
+            const game = games.find(g => g.id === id);
+            if (!game) return;
+
+            document.getElementById('gameId').value = game.id;
+            document.getElementById('gameTitle').value = game.title;
+            document.getElementById('gameCategory').value = game.category;
+            document.getElementById('gameDate').value = game.date;
+            document.getElementById('gameNotes').value = game.notes || '';
+            
+            document.getElementById('modalHeader').innerText = 'Edit Game';
+            document.getElementById('gameModal').style.display = 'flex';
+        }
+
+        function togglePlayed(id) {
+            const game = games.find(g => g.id === id);
+            if (game) {
+                game.played = !game.played;
+                saveToStorage();
+                render();
+            }
+        }
+
+        function deleteGame(id) {
+            if (confirm("Are you sure you want to remove this game?")) {
+                games = games.filter(g => g.id !== id);
+                saveToStorage();
+                render();
+            }
+        }
+
+        function resetDefaultData() {
+            if (confirm("Reset to default game list? This will erase custom additions.")) {
+                games = [...initialGames];
+                saveToStorage();
+                render();
+            }
+        }
+
+        document.getElementById('gameForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('gameId').value;
+            const title = document.getElementById('gameTitle').value;
+            const category = document.getElementById('gameCategory').value;
+            const date = document.getElementById('gameDate').value;
+            const notes = document.getElementById('gameNotes').value;
+
+            if (id) {
+                // Update
+                const game = games.find(g => g.id === id);
+                if (game) {
+                    game.title = title;
+                    game.category = category;
+                    game.date = date;
+                    game.notes = notes;
+                }
+            } else {
+                // Create
+                games.push({
+                    id: Date.now().toString(),
+                    title,
+                    category,
+                    date,
+                    notes,
+                    played: false
+                });
+            }
+
+            saveToStorage();
+            render();
+            closeModal();
+        });
+
+        // Close modal on background click
+        window.onclick = function(event) {
+            const modal = document.getElementById('gameModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Initial Load
+        render();
+    </script>
+</body>
+</html>
